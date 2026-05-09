@@ -20,6 +20,6 @@ runs:
 
     - shell: bash
       run: |
-        deno install --allow-all --name octoscript \
+        deno install --global --allow-all --name octoscript \
           "https://raw.githubusercontent.com/sw2m/octoscript/main/runner.ts"
         echo "✓ octoscript installed → $(which octoscript)"
