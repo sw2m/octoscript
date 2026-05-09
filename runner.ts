@@ -87,7 +87,7 @@ function getOctokit(tk: string, o?: OctokitOpts) {
   );
 }
 const github = getOctokit(token);
-const require = createRequire(import.meta.url);
+const require = createRequire(`file://${Deno.env.get("GITHUB_WORKSPACE") ?? Deno.cwd()}/`);
 
 async function template(path: string | URL, data: Record<string, unknown>): Promise<string> {
   return Mustache.render(await Deno.readTextFile(path), data);
