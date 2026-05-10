@@ -107,7 +107,17 @@ for (const [k, v] of Object.entries(_g)) {
 // Import the script as a module. No string wrapping — the script runs
 // in module scope with globals already on globalThis.
 try {
-  const mod = await import(`file://${await Deno.realPath(path)}`);
+  // Copy script to GITHUB_WORKSPACE so relative imports resolve correctly.
+  // GitHub Actions writes run: blocks to _temp/, but scripts import from ./.github/.
+  const wsDir = Deno.env.get("GITHUB_WORKSPACE") ?? Deno.cwd();
+  const wsPath = wsDir + "/.octoscript-" + crypto.randomUUID().slice(0, 8) + ".ts";
+  await Deno.copyFile(path, wsPath);
+  let mod;
+  try {
+    mod = await import(`file://${await Deno.realPath(wsPath)}`);
+  } finally {
+    await Deno.remove(wsPath).catch(() => {});
+  }
   if (mod.default !== undefined) {
     const out = encoding === "json" ? JSON.stringify(mod.default) : String(mod.default);
     core.setOutput("result", out);
