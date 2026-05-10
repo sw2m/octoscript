@@ -1,0 +1,20 @@
+name: "octoscript"
+description: "Run an octoscript inline script as a node20 action (receives ACTIONS_RUNTIME_TOKEN for artifact support)."
+inputs:
+  script:
+    description: "Inline octoscript to execute"
+    required: true
+  github-token:
+    description: "GitHub token"
+    required: false
+    default: ${{ github.token }}
+  deno-version:
+    description: "Deno version for setup"
+    required: false
+    default: "v2.x"
+outputs:
+  result:
+    description: "Return value from the script (JSON-encoded if object)"
+runs:
+  using: node20
+  main: index.js
