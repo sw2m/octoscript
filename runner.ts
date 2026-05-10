@@ -94,44 +94,21 @@ async function template(path: string | URL, data: Record<string, unknown>): Prom
   return Mustache.render(await Deno.readTextFile(path), data);
 }
 
-// Read script, handle both pre-wrapped modules and raw scripts
-const script = await Deno.readTextFile(path);
-let userFn: Function;
-
-try {
-  const mod = await import(path.endsWith(".ts") ? path : `file://${await Deno.realPath(path)}`);
-  if (typeof mod.default === "function") {
-    userFn = mod.default;
-  } else {
-    throw new Error("not a module");
-  }
-} catch {
-  const wrapped = [
-    "export default async function(_g: any) {",
-    "  const { github, octokit, getOctokit, context, core, exec, glob, io, require, Mustache, template, git, shell, inputs, shared, output, artifact } = _g;",
-    script,
-    "}",
-  ].join("\n");
-  const wsDir = Deno.env.get("GITHUB_WORKSPACE") ?? Deno.cwd();
-  const tmpBase = await Deno.makeTempFile({ dir: wsDir, prefix: ".octoscript-" });
-  const tmpTs = tmpBase + ".ts";
-  await Deno.rename(tmpBase, tmpTs);
-  await Deno.writeTextFile(tmpTs, wrapped);
-  try {
-    const mod = await import(`file://${await Deno.realPath(tmpTs)}`);
-    userFn = mod.default;
-  } finally {
-    await Deno.remove(tmpTs).catch(() => {});
-  }
+// Inject globals so scripts can reference them without imports or wrappers.
+const _g = {
+  github, octokit: github, getOctokit, context, core, exec, glob, io, require,
+  Mustache, template, git: simpleGit(), shell, inputs, shared, output, artifact,
+};
+for (const [k, v] of Object.entries(_g)) {
+  (globalThis as Record<string, unknown>)[k] = v;
 }
 
+// Import the script as a module. No string wrapping — the script runs
+// in module scope with globals already on globalThis.
 try {
-  const result = await userFn({
-    github, octokit: github, getOctokit, context, core, exec, glob, io, require,
-    Mustache, template, git: simpleGit(), shell, inputs, shared, output, artifact,
-  });
-  if (result !== undefined) {
-    const out = encoding === "json" ? JSON.stringify(result) : String(result);
+  const mod = await import(path.endsWith(".ts") ? path : `file://${await Deno.realPath(path)}`);
+  if (mod.default !== undefined) {
+    const out = encoding === "json" ? JSON.stringify(mod.default) : String(mod.default);
     core.setOutput("result", out);
   }
 } catch (err) {
