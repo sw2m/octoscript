@@ -1,5 +1,5 @@
 name: "setup-octoscript"
-description: "Install octoscript if not already present. Exports GITHUB_TOKEN for octoscript runner."
+description: "Install octoscript and export required env vars for downstream steps."
 inputs:
   deno-version:
     required: false
@@ -32,3 +32,11 @@ runs:
         fi
         echo "::add-mask::$GITHUB_TOKEN"
         echo "GITHUB_TOKEN=$GITHUB_TOKEN" >> "$GITHUB_ENV"
+        # Forward runner-internal vars needed by @actions/artifact
+        for v in ACTIONS_RUNTIME_TOKEN ACTIONS_RUNTIME_URL ACTIONS_RESULTS_URL ACTIONS_CACHE_URL; do
+          val="${!v}"
+          if [ -n "$val" ]; then
+            echo "::add-mask::$val"
+            echo "$v=$val" >> "$GITHUB_ENV"
+          fi
+        done
