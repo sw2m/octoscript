@@ -9,7 +9,7 @@
 //
 // Globals injected into user scripts:
 //   github, octokit, context, core, exec, glob, io, require,
-//   Mustache, template, git, shell, inputs, shared, output, artifact
+//   Mustache, template, git, shell, inputs, shared, output, artifact, serde
 
 import { context, getOctokit as raw } from "npm:@actions/github@^6";
 import * as core from "npm:@actions/core@^1";
@@ -27,6 +27,7 @@ import * as inputs from "./lib/inputs.ts";
 import * as shared from "./lib/shared.ts";
 import * as output from "./lib/output.ts";
 import * as artifact from "./lib/artifact.ts";
+import * as serde from "./lib/serde.ts";
 
 globalThis.addEventListener("unhandledrejection", (e: PromiseRejectionEvent) => {
   console.error(e.reason);
@@ -97,7 +98,7 @@ async function template(path: string | URL, data: Record<string, unknown>): Prom
 // Inject globals so scripts can reference them without imports or wrappers.
 const _g = {
   github, octokit: github, getOctokit, context, core, exec, glob, io, require,
-  Mustache, template, git: simpleGit(), shell, inputs, shared, output, artifact,
+  Mustache, template, git: simpleGit(), shell, inputs, shared, output, artifact, serde,
 };
 for (const [k, v] of Object.entries(_g)) {
   (globalThis as Record<string, unknown>)[k] = v;
