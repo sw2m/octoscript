@@ -107,7 +107,7 @@ for (const [k, v] of Object.entries(_g)) {
 // Import the script as a module. No string wrapping — the script runs
 // in module scope with globals already on globalThis.
 try {
-  const mod = await import(path.endsWith(".ts") ? path : `file://${await Deno.realPath(path)}`);
+  const mod = await import(`file://${await Deno.realPath(path)}`);
   if (mod.default !== undefined) {
     const out = encoding === "json" ? JSON.stringify(mod.default) : String(mod.default);
     core.setOutput("result", out);
