@@ -9,7 +9,7 @@
 //
 // Globals injected into user scripts:
 //   github, octokit, context, core, exec, glob, io, require,
-//   Mustache, template, git, shell, inputs, shared, output
+//   Mustache, template, git, shell, inputs, shared, output, artifact
 
 import { context, getOctokit as raw } from "npm:@actions/github@^6";
 import * as core from "npm:@actions/core@^1";
@@ -26,6 +26,7 @@ const simpleGit = (await import("npm:simple-git@^3")).default as any;
 import * as inputs from "./lib/inputs.ts";
 import * as shared from "./lib/shared.ts";
 import * as output from "./lib/output.ts";
+import * as artifact from "./lib/artifact.ts";
 
 globalThis.addEventListener("unhandledrejection", (e: PromiseRejectionEvent) => {
   console.error(e.reason);
@@ -107,7 +108,7 @@ try {
 } catch {
   const wrapped = [
     "export default async function(_g: any) {",
-    "  const { github, octokit, getOctokit, context, core, exec, glob, io, require, Mustache, template, git, shell, inputs, shared, output } = _g;",
+    "  const { github, octokit, getOctokit, context, core, exec, glob, io, require, Mustache, template, git, shell, inputs, shared, output, artifact } = _g;",
     script,
     "}",
   ].join("\n");
@@ -127,7 +128,7 @@ try {
 try {
   const result = await userFn({
     github, octokit: github, getOctokit, context, core, exec, glob, io, require,
-    Mustache, template, git: simpleGit(), inputs, shared, output,
+    Mustache, template, git: simpleGit(), inputs, shared, output, artifact,
   });
   if (result !== undefined) {
     const out = encoding === "json" ? JSON.stringify(result) : String(result);
