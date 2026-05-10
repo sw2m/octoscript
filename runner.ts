@@ -27,7 +27,7 @@ import * as inputs from "./lib/inputs.ts";
 import * as shared from "./lib/shared.ts";
 import * as output from "./lib/output.ts";
 import * as artifact from "./lib/artifact.ts";
-import * as serde from "./lib/serde.ts";
+import * as serde from "./lib/serde/mod.ts";
 
 globalThis.addEventListener("unhandledrejection", (e: PromiseRejectionEvent) => {
   console.error(e.reason);
