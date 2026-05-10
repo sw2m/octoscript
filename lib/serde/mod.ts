@@ -5,6 +5,7 @@ import { parse as parseYaml, stringify as stringifyYaml } from "jsr:@std/yaml";
 import { parse as parseToml, stringify as stringifyToml } from "jsr:@std/toml";
 import { parse as parseJsonc } from "jsr:@std/jsonc";
 import jsonata from "npm:jsonata";
+import { deepMerge } from "jsr:@std/collections/deep-merge";
 import { Engine } from "./frontmatter.ts";
 import type { Format, InnerFormat, Deserializer, Serializer } from "./types.ts";
 
@@ -83,6 +84,15 @@ export function dump(value: unknown, format: Format = "json"): string {
     return new Engine("", deser(inner), ser(inner)).stringify(value);
   }
   return ser(format as InnerFormat)(value);
+}
+
+/** Deep-merge multiple objects. Later sources override earlier ones. */
+export function composite(...sources: Record<string, unknown>[]): Record<string, unknown> {
+  let result: Record<string, unknown> = {};
+  for (const src of sources) {
+    result = deepMerge(result, src, { arrays: "replace" });
+  }
+  return result;
 }
 
 /** Parse frontmatter blocks with position info.
