@@ -1,0 +1,50 @@
+name: "serde-query"
+description: "Read a value from the shared module, parse it, run a JSONata query, and set the result as a step output."
+
+inputs:
+  namespace:
+    required: true
+    description: "Shared module namespace to read from"
+  source:
+    required: true
+    description: "Key name within the namespace to read"
+  query:
+    required: true
+    description: "JSONata expression to evaluate against the parsed value"
+  target:
+    required: false
+    default: "result"
+    description: "Output name to set the result as"
+  format:
+    required: false
+    default: "json"
+    description: "Output format: json, yaml, toml, or raw"
+
+outputs:
+  result:
+    description: "Query result (output name is configurable via the target input)"
+
+runs:
+  using: composite
+  steps:
+    - uses: sw2m/octoscript/action@main
+
+    - shell: octoscript {0}
+      env:
+        INPUT_NAMESPACE: ${{ inputs.namespace }}
+        INPUT_SOURCE: ${{ inputs.source }}
+        INPUT_QUERY: ${{ inputs.query }}
+        INPUT_TARGET: ${{ inputs.target }}
+        INPUT_FORMAT: ${{ inputs.format }}
+      run: |
+        const ns = inputs.get("namespace");
+        const src = inputs.get("source");
+        const expr = inputs.get("query");
+        const target = inputs.get("target");
+
+        const raw = await shared.get(ns, src);
+        const parsed = serde.parse(raw);
+        const result = await serde.query(parsed, expr);
+        const fmt = inputs.get("format") || "json";
+        const val = fmt === "raw" ? String(result) : serde.dump(result, fmt);
+        await output.set(target, val);
