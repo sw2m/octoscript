@@ -9,7 +9,7 @@
 //
 // Globals injected into user scripts:
 //   github, octokit, context, core, exec, glob, io, require,
-//   Mustache, template, git, inputs, shared, output
+//   Mustache, template, git, shell, inputs, shared, output
 
 import { context, getOctokit as raw } from "npm:@actions/github@^6";
 import * as core from "npm:@actions/core@^1";
@@ -107,7 +107,7 @@ try {
 } catch {
   const wrapped = [
     "export default async function(_g: any) {",
-    "  const { github, octokit, getOctokit, context, core, exec, glob, io, require, Mustache, template, git, inputs, shared, output } = _g;",
+    "  const { github, octokit, getOctokit, context, core, exec, glob, io, require, Mustache, template, git, shell, inputs, shared, output } = _g;",
     script,
     "}",
   ].join("\n");
@@ -136,4 +136,20 @@ try {
 } catch (err) {
   core.setFailed(err instanceof Error ? err.message : String(err));
   Deno.exit(1);
+}
+
+/** Run a shell command. Returns { code, stdout, stderr } as byte arrays.
+ *  Injected as `shell` global in octoscript scripts. */
+async function shell(cmd: string): Promise<{ code: number; stdout: Uint8Array; stderr: Uint8Array }> {
+  const proc = new Deno.Command("bash", {
+    args: ["-c", cmd],
+    stdout: "piped",
+    stderr: "piped",
+  }).spawn();
+  const [stdout, stderr] = await Promise.all([
+    new Response(proc.stdout).bytes(),
+    new Response(proc.stderr).bytes(),
+  ]);
+  const { code } = await proc.status;
+  return { code, stdout, stderr };
 }
