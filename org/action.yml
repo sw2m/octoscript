@@ -1,0 +1,28 @@
+name: "verify-org-membership"
+description: "Verify the actor is a public member of the specified GitHub org."
+inputs:
+  org:
+    description: GitHub org name
+    required: true
+  actor:
+    description: Login to verify (defaults to github.actor)
+    required: false
+    default: ${{ github.actor }}
+runs:
+  using: composite
+  steps:
+    - uses: sw2m/octoscript/action@main
+    - shell: octoscript {0}
+      env:
+        INPUT_ORG: ${{ inputs.org }}
+        INPUT_ACTOR: ${{ inputs.actor }}
+      run: |
+        const org = inputs.get("org");
+        const actor = inputs.get("actor");
+        try {
+          await github.rest.orgs.checkMembershipForUser({ org, username: actor });
+          console.log("Verified: " + actor + " is a member of " + org);
+        } catch {
+          core.setFailed(actor + " is not a public member of " + org);
+          exit(1);
+        }
