@@ -1,34 +1,24 @@
 name: "setup-octoscript"
-description: "Install octoscript shell with automatic INPUT_* propagation."
+description: |
+  Install octoscript as a shell command. After this step, any `run:`
+  block with `shell: octoscript {0}` executes as a Deno+Octokit script
+  with injected globals.
+
 inputs:
   deno-version:
+    description: "Deno version to install."
     required: false
     default: "v2.x"
+
 runs:
   using: composite
   steps:
     - uses: denoland/setup-deno@v2
       with:
         deno-version: ${{ inputs.deno-version }}
-    - uses: actions/setup-node@v4
-      with:
-        node-version: "20"
+
     - shell: bash
       run: |
-        OCTOSCRIPT_DIR="${RUNNER_TEMP}/octoscript"
-        mkdir -p "$OCTOSCRIPT_DIR/lib"
-        # Download runner + shim
-        curl -sL "https://raw.githubusercontent.com/sw2m/octoscript/main/runner.ts" -o "$OCTOSCRIPT_DIR/runner.ts"
-        curl -sL "https://raw.githubusercontent.com/sw2m/octoscript/main/index.js" -o "$OCTOSCRIPT_DIR/index.js"
-        curl -sL "https://raw.githubusercontent.com/sw2m/octoscript/main/lib/inputs.ts" -o "$OCTOSCRIPT_DIR/lib/inputs.ts"
-        curl -sL "https://raw.githubusercontent.com/sw2m/octoscript/main/lib/output.ts" -o "$OCTOSCRIPT_DIR/lib/output.ts"
-        curl -sL "https://raw.githubusercontent.com/sw2m/octoscript/main/lib/shared.ts" -o "$OCTOSCRIPT_DIR/lib/shared.ts"
-        # Pre-cache deno deps
-        deno cache "$OCTOSCRIPT_DIR/runner.ts"
-        # Create shell wrapper — node inherits INPUT_* and spawns deno
-        cat > /usr/local/bin/octoscript << SH
-        #!/usr/bin/env bash
-        exec node "$OCTOSCRIPT_DIR/index.js" "\$@"
-        SH
-        chmod +x /usr/local/bin/octoscript
-        echo "✓ octoscript installed"
+        deno install --global --allow-all --name octoscript \
+          "https://raw.githubusercontent.com/sw2m/octoscript/main/runner.ts"
+        echo "✓ octoscript installed → $(which octoscript)"
