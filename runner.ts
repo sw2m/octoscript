@@ -9,7 +9,7 @@
 //
 // Globals injected into user scripts:
 //   github, octokit, context, core, exec, glob, io, require,
-//   Mustache, template, git, shell, inputs, shared, output, artifact, serde
+//   Mustache, template, git, shell, inputs, shared, output, artifact, serde, exit
 
 import { context, getOctokit as raw } from "npm:@actions/github@^6";
 import * as core from "npm:@actions/core@^1";
@@ -98,7 +98,7 @@ async function template(path: string | URL, data: Record<string, unknown>): Prom
 // Inject globals so scripts can reference them without imports or wrappers.
 const _g = {
   github, octokit: github, getOctokit, context, core, exec, glob, io, require,
-  Mustache, template, git: simpleGit(), shell, inputs, shared, output, artifact, serde,
+  Mustache, template, git: simpleGit(), shell, inputs, shared, output, artifact, serde, exit: Deno.exit,
 };
 for (const [k, v] of Object.entries(_g)) {
   (globalThis as Record<string, unknown>)[k] = v;
