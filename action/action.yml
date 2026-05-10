@@ -16,7 +16,7 @@ runs:
     - shell: bash
       run: |
         OCTOSCRIPT_DIR="${RUNNER_TEMP}/octoscript"
-        mkdir -p "$OCTOSCRIPT_DIR"
+        mkdir -p "$OCTOSCRIPT_DIR/lib"
         # Download runner + shim
         curl -sL "https://raw.githubusercontent.com/sw2m/octoscript/main/runner.ts" -o "$OCTOSCRIPT_DIR/runner.ts"
         curl -sL "https://raw.githubusercontent.com/sw2m/octoscript/main/index.js" -o "$OCTOSCRIPT_DIR/index.js"
