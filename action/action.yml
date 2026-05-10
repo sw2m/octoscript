@@ -40,3 +40,23 @@ runs:
             echo "$v=$val" >> "$GITHUB_ENV"
           fi
         done
+        # Create a wrapper that copies scripts to GITHUB_WORKSPACE before
+        # running octoscript, so relative imports resolve against the checkout.
+        REAL_OCTOSCRIPT=$(which octoscript)
+        cat > /tmp/octoscript-wrapper << WRAPPER
+        #!/bin/bash
+        SCRIPT="\$1"
+        WS="\${GITHUB_WORKSPACE:-.}"
+        COPY="\$WS/.octoscript-\$\$.ts"
+        cp "\$SCRIPT" "\$COPY"
+        "\$REAL_OCTOSCRIPT" "\$COPY"
+        RC=\$?
+        rm -f "\$COPY"
+        exit \$RC
+        WRAPPER
+        chmod +x /tmp/octoscript-wrapper
+        # Replace octoscript on PATH with the wrapper
+        INSTALL_DIR=$(dirname "$REAL_OCTOSCRIPT")
+        mv "$REAL_OCTOSCRIPT" "$INSTALL_DIR/octoscript-real"
+        cp /tmp/octoscript-wrapper "$INSTALL_DIR/octoscript"
+        chmod +x "$INSTALL_DIR/octoscript"
