@@ -1,0 +1,61 @@
+name: "frontmatter"
+description: "Parse HTML-comment frontmatter from shared, optionally query, set output."
+
+inputs:
+  namespace:
+    required: true
+    description: "Shared module namespace to read from"
+  source:
+    required: true
+    description: "Key name within the namespace to read"
+  query:
+    required: false
+    description: "JSONata expression to evaluate against the parsed blocks array"
+  inner:
+    required: false
+    description: "Inner format hint: json, yaml, toml. Default: sniff pipeline"
+  target:
+    required: false
+    default: "result"
+    description: "Output name to set the result as"
+  format:
+    required: false
+    default: "json"
+    description: "Output format: json, yaml, toml, or raw"
+
+outputs:
+  result:
+    description: "Parsed frontmatter blocks (or query result). Output name configurable via target."
+
+runs:
+  using: composite
+  steps:
+    - uses: sw2m/octoscript/action@main
+
+    - shell: octoscript {0}
+      env:
+        INPUT_NAMESPACE: ${{ inputs.namespace }}
+        INPUT_SOURCE: ${{ inputs.source }}
+        INPUT_QUERY: ${{ inputs.query }}
+        INPUT_INNER: ${{ inputs.inner }}
+        INPUT_TARGET: ${{ inputs.target }}
+        INPUT_FORMAT: ${{ inputs.format }}
+      run: |
+        const ns = inputs.get("namespace");
+        const src = inputs.get("source");
+        const q = inputs.get("query");
+        const inner = inputs.get("inner");
+        const target = inputs.get("target") || "result";
+        const fmt = inputs.get("format") || "json";
+
+        const raw = await shared.get(ns, src);
+        if (!raw) { core.setFailed("shared/" + ns + "/" + src + " not found"); return; }
+
+        const hint = inner ? "frontmatter:" + inner : "frontmatter";
+        const blocks = serde.parse(raw, hint);
+
+        let result = blocks;
+        if (q) result = await serde.query(blocks, q);
+
+        const val = fmt === "raw" ? String(result) : serde.dump(result, fmt);
+        await output.set(target, val);
