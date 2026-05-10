@@ -34,12 +34,12 @@ runs:
 
     - shell: octoscript {0}
       env:
-        INPUT_NAMESPACE: ${{ inputs.namespace }}
-        INPUT_SOURCE: ${{ inputs.source }}
-        INPUT_QUERY: ${{ inputs.query }}
-        INPUT_INNER: ${{ inputs.inner }}
-        INPUT_TARGET: ${{ inputs.target }}
-        INPUT_FORMAT: ${{ inputs.format }}
+        INPUT_NAMESPACE: ${{ env.INPUT_NAMESPACE || inputs.namespace }}
+        INPUT_SOURCE: ${{ env.INPUT_SOURCE || inputs.source }}
+        INPUT_QUERY: ${{ env.INPUT_QUERY || inputs.query }}
+        INPUT_INNER: ${{ env.INPUT_INNER || inputs.inner }}
+        INPUT_TARGET: ${{ env.INPUT_TARGET || inputs.target }}
+        INPUT_FORMAT: ${{ env.INPUT_FORMAT || inputs.format }}
       run: |
         const ns = inputs.get("namespace");
         const src = inputs.get("source");
