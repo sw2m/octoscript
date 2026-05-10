@@ -1,9 +1,12 @@
 name: "setup-octoscript"
-description: "Install octoscript if not already present. Idempotent."
+description: "Install octoscript if not already present. Exports GITHUB_TOKEN for octoscript runner."
 inputs:
   deno-version:
     required: false
     default: "v2.x"
+  github-token:
+    required: false
+    default: ${{ github.token }}
 runs:
   using: composite
   steps:
@@ -13,15 +16,19 @@ runs:
         deno-version: ${{ inputs.deno-version }}
 
     - shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
       run: |
         if command -v octoscript &>/dev/null; then
           echo "✓ octoscript already installed → $(which octoscript)"
-          exit 0
+        else
+          if ! command -v deno &>/dev/null; then
+            echo "::error::deno not found — setup-deno must run first"
+            exit 1
+          fi
+          deno install --global --allow-all --name octoscript \
+            "https://raw.githubusercontent.com/sw2m/octoscript/main/runner.ts"
+          echo "✓ octoscript installed → $(which octoscript)"
         fi
-        if ! command -v deno &>/dev/null; then
-          echo "::error::deno not found — setup-deno must run first"
-          exit 1
-        fi
-        deno install --global --allow-all --name octoscript \
-          "https://raw.githubusercontent.com/sw2m/octoscript/main/runner.ts"
-        echo "✓ octoscript installed → $(which octoscript)"
+        echo "::add-mask::$GITHUB_TOKEN"
+        echo "GITHUB_TOKEN=$GITHUB_TOKEN" >> "$GITHUB_ENV"
