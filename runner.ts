@@ -128,7 +128,7 @@ try {
 try {
   const result = await userFn({
     github, octokit: github, getOctokit, context, core, exec, glob, io, require,
-    Mustache, template, git: simpleGit(), inputs, shared, output, artifact,
+    Mustache, template, git: simpleGit(), shell, inputs, shared, output, artifact,
   });
   if (result !== undefined) {
     const out = encoding === "json" ? JSON.stringify(result) : String(result);
