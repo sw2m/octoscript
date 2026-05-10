@@ -14,8 +14,8 @@ runs:
     - uses: sw2m/octoscript/action@main
     - shell: octoscript {0}
       env:
-        INPUT_ORG: ${{ inputs.org }}
-        INPUT_ACTOR: ${{ inputs.actor }}
+        INPUT_ORG: ${{ env.INPUT_ORG || inputs.org }}
+        INPUT_ACTOR: ${{ env.INPUT_ACTOR || inputs.actor }}
       run: |
         const org = inputs.get("org");
         const actor = inputs.get("actor");
