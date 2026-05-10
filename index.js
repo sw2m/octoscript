@@ -33,11 +33,11 @@ try {
 
 // Ensure octoscript is installed
 try {
-  execFileSync("octoscript", ["--help"], { stdio: "ignore" });
+  execSync("command -v octoscript", { stdio: "ignore" });
 } catch {
   try {
     execSync(
-      'deno install --global --allow-all --name octoscript "https://raw.githubusercontent.com/sw2m/octoscript/main/runner.ts"',
+      'deno install --global --allow-all -f --name octoscript "https://raw.githubusercontent.com/sw2m/octoscript/main/runner.ts"',
       { stdio: "inherit", env: process.env }
     );
   } catch (e) {
